@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Intrinsics</key>
+	<dict>
+		<key>distortion</key>
+		<array/>
+		<key>ppy</key>
+		<integer>0</integer>
+		<key>ppx</key>
+		<integer>0</integer>
+		<key>fy</key>
+		<integer>0</integer>
+		<key>fx</key>
+		<integer>0</integer>
+		<key>isPinhole</key>
+		<true/>
+	</dict>
+	<key>extrinsics</key>
+	<dict>
+		<key>height</key>
+		<integer>0</integer>
+		<key>translation</key>
+		<array/>
+		<key>rotation</key>
+		<array/>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,6 @@
+Instructions on building Xcode project
+ 1. run "brew install opencv"
+ 2. add opencv library in Build Phases
+ 3. specify search path for opencv header files in Build Settings 
+    e.g. /opt/homebrew/Cellar/opencv/4.9.0_10/include/opencv4
+
