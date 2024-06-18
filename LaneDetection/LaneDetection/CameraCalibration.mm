@@ -1,5 +1,5 @@
 //
-//  CameraCalibration.m
+//  CameraCalibration.mm
 //  LaneDetection
 //
 //  Created by charles zeng on 6/15/24.
@@ -135,9 +135,11 @@ bool Binarize::SobelFilter(const cv::Mat& frameRGB, cv::Mat& frameSobelMask)
             frame8U.at<char>(i, j) = (char)(frameCombined.at<double>(i, j)/maxValue * 255.0);
         }
     }
-    // maxValue is arbitrarily selected for testing purpose
+    // maxValue is arbitrarily selected for debugging purpose
     cv::threshold(frame8U, frameSobelMask, threshold_value, 128, cv::THRESH_BINARY);
-    show(frame8U, "Frame8u");
+#if DEBUG
+    show(frame8U, "Frame8U");
+#endif
     return true;
 }
 
@@ -157,7 +159,7 @@ bool Binarize::process(const cv::Mat& frameRGB, cv::Mat& frameOut)
     cv::bitwise_or(mask, frameSobelMask, frameBinary);
     MorphFilter(frameBinary, mask2);
     
-    // maxValue is arbitrarily selected for testing purpose
+    // maxValue is arbitrarily selected for debugging purpose
     cv::threshold( mask2, frameOut, 50, 255, cv::THRESH_BINARY);
     return true;
 }
@@ -171,8 +173,8 @@ bool Binarize::MorphFilter(const cv::Mat& frameBinary, cv::Mat& frameMorphed)
 }
 bool Binarize::HistogramFilter(const cv::Mat& frameRGB, cv::Mat& frameHist)
 {
-    const int threshold = 250; // arbitrarily selected for testing purpose
-    const int maxVal = 255; // arbitrarily selected for testing purpose
+    const int threshold = 250; // arbitrarily selected for debugging purpose
+    const int maxVal = 255; // arbitrarily selected for debugging purpose
     cv::Mat frameGray;
     cvtColor(frameRGB, frameGray, cv::COLOR_RGB2GRAY);
     cv::Mat hist;
@@ -221,7 +223,7 @@ bool DetectAndMarkLane::detectLane (cv::Mat &frameBinary, cv::Mat&frameOut, cv::
         cv::Mat croppedImage;
         frameBinary(cv::Rect(0,height/2,width,height/2)).copyTo(croppedImage);
         std::vector<int> histogram(frameBinary.size().width);
-        cout << frameBinary.type() << std::endl;
+
         int leftx_max = 0, rightx_max = 0;
         int leftx_base = 0, rightx_base = width/2;
         
@@ -367,7 +369,6 @@ bool DetectAndMarkLane::detectLane (cv::Mat &frameBinary, cv::Mat&frameOut, cv::
         return false;
     }
 
-    std::cout << endl;
     return true;
     
 }
@@ -476,7 +477,7 @@ bool LaneDetectionPipeline::processOneFrame(const cv::Mat& img)
     undistortStage->process(img, imgUndistorted);
     /*
          Step Two:
-         do Gaussian/HSV/Sobel/Equalize/Morph filtering,
+         Apply Gaussian/HSV/Sobel/Equalize/Morph filter,
          then threshold.
      */
     auto binarizeStage = getStage("Binarize");
@@ -491,7 +492,7 @@ bool LaneDetectionPipeline::processOneFrame(const cv::Mat& img)
     /*
          Step Three: (detect/estimate lane dividers)
 
-         warped image to birdview
+         warp image to birdview
 
          produce histogram by column on bottom half,
          find two columns (one for left half, the other for right
@@ -510,12 +511,12 @@ bool LaneDetectionPipeline::processOneFrame(const cv::Mat& img)
           will be used to determine the second order polynomial.
 
      */
-    auto persectiveWarpStage = getStage("PerspectiveWarp");
-    assert(persectiveWarpStage);
+    auto perspectiveWarpStage = getStage("PerspectiveWarp");
+    assert(perspectiveWarpStage);
     cv::Mat warped;
-    persectiveWarpStage->process(img, warped);
+    perspectiveWarpStage->process(img, warped);
     cv::Mat binaryWarped;
-    persectiveWarpStage->process(imgBinarized,binaryWarped);
+    perspectiveWarpStage->process(imgBinarized,binaryWarped);
     auto detectLaneLines = getStage("DetectAndMarkLane");
     assert(detectLaneLines);
    
@@ -523,12 +524,12 @@ bool LaneDetectionPipeline::processOneFrame(const cv::Mat& img)
     cv::Vec4i leftLine, rightLine;
     detectLaneLines->detectLane(binaryWarped, frameOut, leftLine, rightLine);
     /*
-         Step Four: Mark lane dividers
+         Step Four: Mark lane
 
          use the two polynomials to generate vertex points on the two lines.
          fill the lanes and draw the lines, warp them to camera view.
 
-         blend the filled lane and drawn lines in two the original images
+         blend the filled lane and drawn lines in the original images
 
      */
     cv::Mat blendedFrame;
